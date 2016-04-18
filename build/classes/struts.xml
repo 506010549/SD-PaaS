@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE struts PUBLIC
+	"-//Apache Software Foundation//DTD Struts Configuration 2.3//EN"
+	"http://struts.apache.org/dtds/struts-2.3.dtd">
+
+<struts>
+
+	<constant name="struts.objectFactory" value="org.apache.struts2.spring.StrutsSpringObjectFactory" />  
+    <constant name="struts.enable.DynamicMethodInvocation" value="false" />
+    <constant name="struts.devMode" value="true" />
+
+    <package name="default" namespace="/demo" extends="json-default">
+    	<!-- 获取AccessToken -->
+    	<action name="getAccessToken" class="cn.com.sandi.demo.action.DemoAction" method="getAccessToken">
+    		<result type="json">
+    			<param name="root">result</param>
+    		</result>
+    	</action>
+    	
+    	<!-- 查询录音 -->
+    	<action name="getRecordList" class="cn.com.sandi.demo.action.DemoAction" method="getRecordList">
+    		<result type="json">
+    			<param name="root">result</param>
+    		</result>
+    	</action>
+    	
+    	<!--  -->
+    	<action name="getAgentCallHistoryList" class="cn.com.sandi.demo.action.DemoAction" method="getAgentCallHistoryList">
+    		<result type="json">
+    			<param name="root">result</param>
+    		</result>
+    	</action>
+    	
+    	<action name="getRecordFile" class="cn.com.sandi.demo.action.DemoAction" method="getRecordFile">
+    		<result type="json">
+    			<param name="root">result</param>
+    		</result>
+    	</action>
+    	
+    	<action name="downloadRecord" class="cn.com.sandi.demo.action.DemoAction" method="downloadRecord">
+    		<result name="input" type="json">
+    			<param name="root">result</param>
+    		</result>
+    		<result name="success" type="stream">
+				<param name="contentType">application/octet-stream</param>
+				<param name="contentDisposition">attachment;filename="voice.wav"</param>
+    		</result>
+    	</action>
+    	
+    	<action name="getuserinfo" class="cn.com.sandi.demo.action.DemoAction" method="getuserinfo">
+    		<result type="json">
+    			<param name="root">result</param>
+    		</result>
+    	</action>
+    	
+    	<action name="exportExcel" class="cn.com.sandi.demo.action.DemoAction" method="exportExcel">
+    		<result name="input" type="json">
+    			<param name="root">result</param>
+    		</result>
+    		<result name="success" type="stream">
+				<param name="contentType">application/vnd.ms-excel</param>
+				<param name="contentDisposition">attachment;filename="table.xls"</param>
+    		</result>
+    	</action>
+    </package>
+
+</struts>

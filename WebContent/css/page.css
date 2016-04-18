@@ -1,0 +1,33 @@
+form .form-group.col-sm-4 > label {
+	line-height: 34px;
+}
+#search-btn {
+	width: 90px;
+	margin-top: 5px;
+	float: right;
+}
+.search-form {
+	border-bottom: 1px solid #eee;
+	padding-bottom: 9px;
+}
+#result > table > tbody > tr:nth-child(even) > td {
+	background-color: #dff0d8;
+}
+#result > table > tbody > th, 
+#result > table > tbody > td {
+	text-align: center;
+}
+code {
+	background-color: transparent;
+}
+.java {
+    border: 1px solid #ddd;
+    padding: 20px;
+}
+.remark > .panel-body {
+	line-height: 150%;
+}
+.tab-pane > .java,
+.tab-pane > .remark {
+	border-top: none;
+}

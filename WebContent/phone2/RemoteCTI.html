@@ -1,0 +1,972 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>互联互通</title>
+ <link rel="stylesheet" type="text/css" href="http://www.sandicloud.com:9812/InterconCTI/css/themes/gray/easyui.css" />
+<link rel="stylesheet" type="text/css" href="http://www.sandicloud.com:9812/InterconCTI/css/themes/icon.css" />
+<link rel="stylesheet" type="text/css" href="http://www.sandicloud.com:9812/InterconCTI/css/style.css" />
+
+<script type="text/javascript" src="http://www.sandicloud.com:9812/InterconCTI/js/jquery-1.11.1.min.js"></script>
+<script type="text/javascript" src="http://www.sandicloud.com:9812/InterconCTI/js/jquery.easyui-1.4.1.min.js"></script>
+<script type="text/javascript" src="http://www.sandicloud.com:9812/InterconCTI/js/easyui-lang-zh_CN.js"></script>
+
+</head>
+<body class="easyui-layout" border="false" >
+<div id="divTopTabs" class="top-tabs" region="north" border="false">
+	<div id="orgAll" class="top-tabs-active">全网</div>
+	<div id="orgFav" style="display: none">收藏夹</div>
+	<div id="orgRecent" style="display: none">最近</div>
+	
+	<div id="searchTools" style="padding-left: 20px;"><input id="txtFindKey" type="text" /></div>
+</div>
+<div region="center" border="false"  fit="true" style="background:#ECEFF4;">
+	<div id="divAllTree">
+		<div id="leftnav" title="点击返回组织树" style="width:25px;height:300px;float: left;display: none;"><div style="margin-top: 143px;" class="tree-right-icon icon-up"></div></div>
+		<div id="divOrgSite" style="width: 47%;background: transparent;padding: 5px 10px 0px 10px;float: left;">
+			<ul id="treeOrgSite" style="background-color: #fff;border:1px solid #AAAAAA"></ul>
+		</div>
+		<div id="divGroupDept" class="easyui-accordion" data-options="multiple:true" style="width: 43%;float: left;margin: 5px 10px 0px 0px;border-bottom:0px;">   
+		    <div title="座席组" selected="true" style="overflow:auto;">
+		    	<ul id="ulAgtGroup"></ul>
+		    </div>
+		    <!-- 
+		    <div title="部门" selected="true">
+		        <ul>
+		    		<li style="border:0px;"><div class="itemIcon icon-dept"></div><div class="itemInfo">test</div><div class="dialTools" style="display: none;"><div class="icon-dial"></div><div class="icon-trans"></div></div></li>
+		    	</ul>    
+		    </div>
+		     -->   
+		</div>
+		<div id="divAgent" class="easyui-accordion" data-options="multiple:true" style="width: 43%;float: left;margin: 5px 10px 0px 0px;border-bottom:0px;">   
+		    <div title="座席" style="overflow:auto;">
+		    	<ul id="ulAgent"></ul>
+		    </div>
+		</div>
+		
+		<div id="divNodata" class="nodata" style="display: none;"></div>
+	</div>
+	<div id="divOrgFav" style="display: none;">[收藏夹]功能正在努力开发中，敬请期待</div>
+	<div id="divOrgRecent" style="display: none;">[最近]功能正在努力开发中，敬请期待</div>
+	<div id="divSearchList" style="padding-bottom:38px;display: none;"></div>
+</div>
+
+<script type="text/javascript">
+var g_organizerId="";
+var g_tenantsId="";
+var g_myId="";
+var g_url = "http://www.sandicloud.com:9812/ET3/";
+//var g_url = "http://172.16.23.41:9088/VenusAgent/";
+
+var intercon={
+	lastOrgId:"",
+	lastGrpId:"",
+	lastAgtId:"",
+	lastCtiId:"",
+	lastTabId:"",
+	dialGroup:0,
+	dialMode:0,
+	dialPrefix:"",
+	ctiId:"",
+	findGropId:"",
+	findAgentId:"",
+	framework:"",	//框架标识
+	frameworkObj:null //框架对象
+};
+
+$(document).ready(function(){
+	intercon.loadParams();
+	if(intercon.loadCtiInfo()==false) return false;
+	var pageMask=$("<div id=\"divMask\" class=\"datagrid-mask\"></div>").css({display:"none",width:"100%",height:"100%",zIndex:10000});
+	pageMask.appendTo("body");
+	var pageMaskMsg=$("<div id=\"divMaskMsg\" class=\"datagrid-mask-msg\"></div>").html("正在加载数据，请稍候。。。").css({display:"none",left:($(document.body).outerWidth(true) - 190) / 2,top:($(window).height() - 45) / 2,zIndex:10001});
+	pageMaskMsg.appendTo("body");
+	
+	$('#txtFindKey').searchbox({   
+		width:200,
+		searcher:function(value,name){
+			intercon.searchAll(value);
+		},
+		prompt:'支持拼音查找'  
+	});
+	$("#divAgent,#divGroupDept").hide();
+	
+	intercon.checkFrarework();
+	intercon.initTopTabs();
+	intercon.initOrgSiteTree();
+	
+	$("#leftnav").click(function(){
+		$("#divOrgSite").show(500);
+		$("#leftnav,#divAgent,#divNodata").hide(500);
+	});
+});
+
+intercon.loadParams=function(){
+	//通过URL获取参数
+	var searchStr = location.search;
+	if($.trim(searchStr)=="") return;
+	searchStr = searchStr.substr(1);
+	var searchs = searchStr.split("&");
+	for(var i=0;i<searchs.length;i++){
+		var param=searchs[i].split("=");
+		if(param[0].toLowerCase()=="tenantsid"){
+			g_tenantsId = param[1];
+		}else if(param[0].toLowerCase()=="organizerid"){
+			g_organizerId = param[1];
+		}else if(param[0].toLowerCase()=="myid"){
+			g_myId = param[1];
+		}
+	}
+}
+
+//根据myId加载CTI信息
+intercon.loadCtiInfo=function(){
+	if(g_myId==""){
+		$("body").empty();
+		alert("非法访问");
+		return false;
+	}
+	
+	$.ajax({
+		type: "get",
+		async: false,
+  		url:g_url+"webservice/cc/rest/agent/getOrganizerCtiInfo",
+  		headers: {
+            "organizerId" : g_myId,
+            "tenantsId": g_tenantsId
+        },
+  		success: function(data){
+  			if(typeof(data)=="string"){
+  				$("body").empty();
+  				alert(data);
+  				return false;
+  			}
+  			if(data.length<=0 || data[0].ctiId==""){
+  				$("body").empty();
+  				alert("未配置CTIID");
+  				return false;
+  			}
+  			intercon.ctiId=data[0].ctiId;
+  			intercon.dialGroup=data[0].dialGrp
+  			intercon.dialMode=data[0].dialMode
+  			intercon.dialPrefix=data[0].dialPrefix
+  			return true;
+  		},
+  		error:function(req,state,err){
+  			$("body").empty();
+  			alert("加载数据失败");
+  			return false;
+  		}
+	});
+}
+
+//初始化组织树
+intercon.initOrgSiteTree=function(){
+	//if(g_organizerId=='null') g_organizerId="";
+	//if(g_tenantsId=='null') g_tenantsId="";
+	intercon.showMask();
+	$("#treeOrgSite").tree({
+		url:g_url+"webservice/cc/rest/agent/getOrganizerCtiTree?organizerIds="+g_organizerId+"&tenantsIds="+g_tenantsId,
+		method:'get',
+		animate:true,
+		rightOper:true,
+		onExpand:function(node){
+			$(node.target).find("span.tree-right-icon").removeClass().addClass("tree-right-icon icon-down");
+		},
+		onCollapse:function(node){
+			$(node.target).find("span.tree-right-icon").removeClass().addClass("tree-right-icon icon-up");
+		},
+		onClick:function(node){
+			intercon.orgTreeNodeClick(node);
+		},
+		onLoadSuccess:function(node, data){
+			if(data.length<=0){
+				$("#treeOrgSite").hide();
+				intercon.hideMask();
+				alert("暂无组织数据");
+				return;
+			}
+			$("#divOrgSite span.tree-right-icon").bind("click",function(){
+				var n = $("#treeOrgSite").tree("getNode",$(this).parent());
+				if(n.state=='open'){
+					$("#treeOrgSite").tree("collapse",n.target);
+				}else{
+					$("#treeOrgSite").tree("expand",n.target);
+				}
+			});
+			intercon.hideMask();
+			
+			$("#treeOrgSite>li>div").addClass("treeroot");
+		},
+		onLoadError:function(arguments){
+			alert(arguments.responseText);
+			intercon.hideMask();
+		}
+	});
+};
+
+intercon.orgTreeNodeClick=function(node){
+	if(intercon.lastOrgId==node.id){
+		if(intercon.findGropId!=""){
+			intercon.findGroup(intercon.findGropId);
+		}
+		return;
+	}
+	intercon.lastOrgId=node.id;
+	intercon.loadGrpupDept(node.id);
+	intercon.lastCtiId=node.attributes.CTI_ID;
+	if(node.children==undefined) return;
+	if(node.state=='closed'){
+		intercon.oneExpand(node);
+		$("#treeOrgSite").tree("expand",node.target);
+	}
+}
+
+//初始化选项卡
+intercon.initTopTabs=function(){
+	intercon.lastTabId="divAllTree";
+	$("#divTopTabs div").click(function(){
+		var id = $(this).attr("id");
+		if(id=="searchTools") return;
+		$("#divTopTabs div").removeClass("top-tabs-active");
+		$(this).addClass("top-tabs-active");
+		intercon.tabsClick(id);
+	});
+}
+
+intercon.tabsClick=function(id){
+	intercon.lastTabId=id;
+	if(id=="orgAll"){	//全网页面
+		$("#divAllTree").show();
+		$("#divOrgFav").hide();
+		$("#divOrgRecent").hide();
+		$("#divSearchList").hide();
+	}else if(id=="orgFav"){	//收藏夹页面
+		$("#divAllTree").hide();
+		$("#divOrgFav").show();
+		$("#divOrgRecent").hide();
+		$("#divSearchList").hide();
+	}else if(id=="orgRecent"){	//最近页面
+		$("#divAllTree").hide();
+		$("#divOrgFav").hide();
+		$("#divOrgRecent").show();
+		$("#divSearchList").hide();
+	}
+}
+
+//只展开一个同级节点
+intercon.oneExpand=function(node){
+	var pNode = $("#treeOrgSite").tree("getParent",node.target);
+	if(pNode!=null){
+		if(pNode.children!=null){
+			for(var i=0;i<pNode.children.length;i++){
+				var n = pNode.children[i];
+				if(n.state=='open' && n.children!=null){
+					if(n.target==undefined){
+						n=$("#treeOrgSite").tree("find",n.id);
+					}
+					$("#treeOrgSite").tree("collapse",n.target);
+				}
+			}
+		}
+	}
+}
+
+//加载座席组及部门数据(这一版本不支持加载部门)
+intercon.loadGrpupDept=function(organizerId){
+	$("#divGroupDept").show(500);
+	
+	intercon.showMask();
+	$("#divNodata").html("").hide();
+	$.ajax({
+		type: "get",
+		async: false,
+  		url:g_url+"webservice/cc/rest/agent/getOrganizerCtiGroup",
+  		headers: {
+            "organizerIds" : organizerId,
+            "tenantsIds": g_tenantsId
+        },
+  		success: function(data){
+  			if(typeof(data)=="string"){
+  				alert(data);
+  			}
+  			if(data==null || data.length<=0){
+  				$("#divGroupDept").hide();
+  				$("#divNodata").html("该组织暂无座席组").show();
+  			}else{
+  				$("#divGroupDept").show();
+  				$("#divNodata").html("").hide();
+  				intercon.makeGroupHtml(data);
+  			}
+  			intercon.hideMask();
+  		},
+  		error:function(req,state,err){
+  			$("#divGroupDept").hide();
+  			$("#divNodata").html("加载该组织座席组列表失败").show();
+  			intercon.hideMask();
+  		}
+	});
+}
+
+//生成座席组列表
+intercon.makeGroupHtml=function(data){
+	$("#ulAgtGroup").empty();
+	var lihtml=[];
+	var grpInfo="";
+	for(var i=0;i<data.length;i++){
+		grpInfo=data[i].GROUPNAME+"("+data[i].GROUPID+")";
+		if(i==data.length-1){
+			lihtml.push('<li style="border:0px;" groupId="'+data[i].GROUPID+'">');
+		}else{
+			lihtml.push('<li groupId="'+data[i].GROUPID+'">');
+		}
+		lihtml.push('<div class="itemIcon icon-group"></div><div class="itemInfo" title="'+grpInfo+'">');
+		lihtml.push(grpInfo);
+		lihtml.push('</div><div class="dialTools" style="display: none;">');
+		lihtml.push('<div class="icon-dial" title="外拨" groupId="'+data[i].GROUPID+'" orgId="'+data[i].ORGANIZER_ID+'"></div>');
+		lihtml.push('<div class="icon-trans" style="display:block;" title="转接" groupId="'+data[i].GROUPID+'" orgId="'+data[i].ORGANIZER_ID+'"></div>');
+		lihtml.push('</div></li>');
+	}
+	$("#ulAgtGroup").append(lihtml.join(''));
+	
+	$("#divGroupDept ul li").bind({
+		click:function(){
+			$("#divOrgSite").hide(500);
+			$("#leftnav,#divAgent").show(500);
+
+			var orgId=$(this).attr("orgId");
+			var grpId=$(this).attr("groupId");
+			if(intercon.lastOrgId==orgId && intercon.lastGrpId==grpId){
+				if(intercon.findAgentId!=""){
+					intercon.findAgent(intercon.findAgentId);
+				}
+				return;
+			}
+			intercon.lastGrpId=grpId;
+			$("#divGroupDept ul li").removeClass("accordion-li-selected");
+			$(this).addClass("accordion-li-selected");
+			
+			$("#divGroupDept").find("div.dialTools").hide();
+			if(intercon.lastCtiId!=intercon.ctiId || intercon.dialMode==1){
+				$(this).find("div.itemInfo").css("width","55%");
+				$(this).find("div.dialTools").show();
+			}
+			
+			intercon.loadAgentList();
+		},
+		mouseover:function(){
+			if(intercon.lastCtiId!=intercon.ctiId || intercon.dialMode==1){
+				$(this).find("div.itemInfo").css("width","55%");
+				$(this).find("div.dialTools").show();
+			}
+		},
+		mouseout:function(){
+			if($(this).attr("class")=="accordion-li-selected") return;
+			$(this).find("div.itemInfo").css("width","");
+			$(this).find("div.dialTools").hide();
+		}
+	});
+	
+	//外拨点击
+	$("#ulAgtGroup li div.icon-dial").bind("click",function(){
+		intercon.runDial($(this).attr("groupId"),"grp");
+	});
+	
+	//转接点击
+	$("#ulAgtGroup li div.icon-trans").bind("click",function(){
+		intercon.runTrans($(this).attr("groupId"),"grp");
+	});
+	
+	if(intercon.findGropId!=""){
+		intercon.findGroup(intercon.findGropId);
+	}
+}
+
+//加载座席数据
+intercon.loadAgentList=function(){
+	intercon.showMask();
+	$.ajax({
+		type: "get",
+		async: false,
+  		url:g_url+"webservice/cc/rest/agent/getOrganizerCtiAgent",
+  		headers: {
+            "organizerIds" : intercon.lastOrgId,
+            "tenantsIds": g_tenantsId,
+            "groupId":intercon.lastGrpId
+        },
+  		success: function(data){
+  			if(typeof(data)=="string"){
+  				alert(data);
+  			}
+  			if(data==null || data.length<=0){
+  				$("#divAgent").hide();
+  				$("#divNodata").html("该座席组暂无座席").show();
+  			}else{
+  				$("#divAgent").show();
+  				$("#divNodata").html("").hide();
+  				intercon.makeAgentHtml(data);
+  			}
+  			intercon.hideMask();
+  		},
+  		error:function(req,state,err){
+  			$("#divAgent").hide();
+  			$("#divNodata").html("加载该座席组座席列表失败").show();
+  			intercon.hideMask();
+  		}
+	});
+}
+
+//生成座席列表
+intercon.makeAgentHtml=function(data){
+	$("#ulAgent").empty();
+	var lihtml=[];
+	var agtInfo = "";
+	for(var i=0;i<data.length;i++){
+		agtInfo = data[i].NAME+"(" + data[i].AGENTID + ")";
+		if(i==data.length-1){
+			lihtml.push('<li style="border:0px;" agentId="'+data[i].AGENTID+'">');
+		}else{
+			lihtml.push('<li agentId="'+data[i].AGENTID+'">');
+		}
+		lihtml.push('<div class="itemIcon icon-agt"></div><div class="itemInfo" title="'+agtInfo+'">');
+		lihtml.push(agtInfo);
+		lihtml.push('</div><div class="dialTools" style="display: none;">');
+		lihtml.push('<div class="icon-dial" title="外拨" agentId="'+data[i].AGENTID+'"></div>');
+		lihtml.push('<div class="icon-trans" style="display:block;" title="转接" agentId="'+data[i].AGENTID+'"></div>');
+		lihtml.push('</div></li>');
+	}
+	$("#ulAgent").append(lihtml.join(''));
+	
+	$("#divAgent ul li").bind({
+		click:function(){
+			$("#divAgent ul li").removeClass("accordion-li-selected");
+			$(this).addClass("accordion-li-selected");
+			
+			$("#divAgent").find("div.dialTools").hide();
+			$(this).find("div.itemInfo").css("width","55%");
+			$(this).find("div.dialTools").show();
+		},
+		mouseover:function(){
+			$(this).find("div.itemInfo").css("width","55%");
+			$(this).find("div.dialTools").show();
+		},
+		mouseout:function(){
+			if($(this).attr("class")=="accordion-li-selected") return;
+			$(this).find("div.itemInfo").css("width","");
+			$(this).find("div.dialTools").hide();
+		}
+	});
+	
+	//外拨点击
+	$("#ulAgent li div.icon-dial").bind("click",function(){
+		intercon.runDial($(this).attr("agentId"),"agt");
+	});
+	
+	//转接点击
+	$("#ulAgent li div.icon-trans").bind("click",function(){
+		intercon.runTrans($(this).attr("agentId"),"agt");
+	});
+	
+	if(intercon.findAgentId!=""){
+		intercon.findAgent(intercon.findAgentId);
+	}
+}
+
+//显示加载层
+intercon.showMask=function(){
+	$("#divMask,#divMaskMsg").show();
+}
+
+//隐藏加载层
+intercon.hideMask=function(){
+	$("#divMask,#divMaskMsg").hide();
+}
+
+//外拨
+intercon.runDial=function(dnis,type){
+	if(intercon.framework=="WebAgent"){
+		intercon.runWebAgentDial(dnis,type);
+	}else if(intercon.framework=="OCX"){
+		intercon.runOcxDial(dnis,type);
+	}else if(intercon.framework=="VB"){
+		intercon.runVBDial(dnis,type);
+	}else if(intercon.framework=="SdAgent"){
+		intercon.runSdAgentDial(dnis,type);
+	}
+}
+
+//转接
+intercon.runTrans=function(dnis,type){
+	if(intercon.framework=="WebAgent"){
+		intercon.runWebTrans(dnis,type);
+	}else if(intercon.framework=="OCX"){
+		intercon.runOcxTrans(dnis,type);
+	}else if(intercon.framework=="VB"){
+		intercon.runVBTrans(dnis,type);
+	}else if(intercon.framework=="SdAgent"){
+		intercon.runSdAgentTrans(dnis,type);
+	}
+}
+
+intercon.runWebAgentDial=function(dnis,type){
+	if(top.Client.Global.AgentState==3){
+		intercon.showMessage("请先注册座席","互联互通");
+		return;
+	}
+	if(top.Client.Global.CallState!=0 || top.Client.Global.occupy!=0){
+		intercon.showMessage("当前座席非空闲状态，无法进行互联互通外拨操作","互联互通");
+		return;
+	}
+		
+	//本地CTI
+	if(intercon.lastCtiId==intercon.ctiId){
+		var dialGrp = parseInt(top.Client.Global.AgentConfig.DialOutGrp);
+		if(type=="agt"){
+			top.AgentApi.dial(dnis, "A", dialGrp, dnis);
+		}else{
+			//允许外拨本地座席组
+			if(intercon.dialMode==1){
+				top.AgentApi.dial(dnis, "G", dialGrp, dnis);
+			}
+		}
+	}else{
+		var dialNumber = intercon.getDialNumber(dnis,top.Client.Global.AgentID,type);
+		if(intercon.dialMode==1){
+			top.AgentApi.dial(dialNumber, "R", intercon.dialGroup, dnis);
+		}else{
+			top.AgentApi.dial(dialNumber, "X", intercon.dialGroup, dnis);
+		}
+	}
+}
+
+intercon.runWebTrans=function(dnis,type){
+	if(top.Client.Global.AgentState==3){
+		intercon.showMessage("请先注册座席","互联互通");
+		return;
+	}
+	if(top.Client.Global.CallState!=2){
+		intercon.showMessage("当前座席非通话状态，无法进行互联互通转接操作","互联互通");
+		return;
+	}
+	
+	var lastCallId = top.Client.Global.LastCall.CallID;
+	//本地CTI
+	if(intercon.lastCtiId==intercon.ctiId){
+		var dialGrp = parseInt(top.Client.Global.AgentConfig.DialOutGrp);
+		if(type=="agt"){
+			top.AgentApi.agtReturnIVR("1",lastCallId,dnis+",");
+		}else{
+			top.AgentApi.agtReturnIVR("1",lastCallId,","+dnis);
+		}
+	}else{
+		var dialNumber = intercon.getDialNumber(dnis,top.Client.Global.AgentID,type);
+		var transNO = dialNumber.split("*");
+		transNO =transNO[0] +"*"+ top.Client.Global.LastCall.ANI
+		top.AgentApi.agtReturnIVR("9",lastCallId,",,"+transNO);
+	}
+}
+
+intercon.runOcxDial=function(dnis,type){
+	//本地CTI
+	if(intercon.lastCtiId==intercon.ctiId){
+		var dialGrp = parseInt(top.Client.Global.AgentConfig.DialOutGrp);
+		if(type=="agt"){
+			top.Client.ICareAgent.Run("Dial", dnis, "A", dialGrp,dnis);
+		}else{
+			//允许外拨本地座席组
+			if(intercon.dialMode==1){
+				top.Client.ICareAgent.Run("Dial", dnis, "G", dialGrp,dnis);
+			}
+		}
+	}else{
+		var dialNumber = intercon.getDialNumber(dnis,top.Client.Global.AgentID,type);
+		if(intercon.dialMode==1){
+			top.Client.ICareAgent.Run("Dial", dialNumber, "R", intercon.dialGroup,dnis);
+		}else{
+			top.Client.ICareAgent.Run("Dial", dialNumber, "X", intercon.dialGroup,dnis);
+		}
+	}
+}
+
+intercon.runOcxTrans=function(dnis,type){
+	if(top.Client.Global.AgentState==3){
+		intercon.showMessage("请先注册座席","互联互通");
+		return;
+	}
+	if(top.Client.Global.CallState!=2){
+		intercon.showMessage("当前座席非通话状态，无法进行互联互通转接操作","互联互通");
+		return;
+	}
+
+	var lastCallId = top.Client.Global.LastCall.CallID;
+	//本地CTI
+	if(intercon.lastCtiId==intercon.ctiId){
+		var dialGrp = parseInt(top.Client.Global.AgentConfig.DialOutGrp);
+		if(type=="agt"){
+			top.Client.ICareAgent.Run("ReturnIVR","1",lastCallId,dnis+",");
+		}else{
+			top.Client.ICareAgent.Run("ReturnIVR","1",lastCallId,","+dnis);
+		}
+	}else{
+		var dialNumber = intercon.getDialNumber(dnis,top.Client.Global.AgentID,type);
+		var transNO = dialNumber.split("*");
+		transNO =transNO[0] +"*"+ top.Client.Global.LastCall.ANI
+		top.Client.ICareAgent.Run("ReturnIVR","9",lastCallId,",,"+transNO);
+	}
+}
+
+//VB框架暂时不支持互联互通外拨对象
+intercon.runVBDial=function(dnis,type){
+	
+}
+
+intercon.runVBTrans=function(dnis,type){
+	
+}
+
+//SdAgent第三方框架外拨
+intercon.runSdAgentDial=function(dnis,type){
+	if(intercon.frameworkObj.phone.agtStatus==3){
+		intercon.showMessage("请先注册座席","互联互通");
+		return;
+	}
+	if(intercon.frameworkObj.phone.callStatus!=0 || intercon.frameworkObj.phone.occupy!=0){
+		intercon.showMessage("当前座席非空闲状态，无法进行互联互通外拨操作","互联互通");
+		return;
+	}
+		
+	//本地CTI
+	if(intercon.lastCtiId==intercon.ctiId){
+		var dialGrp = parseInt(intercon.frameworkObj.phone.dialGrp);
+		if(type=="agt"){
+			intercon.frameworkObj.SdAgent.dialout(dnis, "A", dialGrp);
+		}else{
+			//允许外拨本地座席组
+			if(intercon.dialMode==1){
+				intercon.frameworkObj.SdAgent.dialout(dnis, "G", dialGrp);
+			}
+		}
+	}else{
+		var dialNumber = intercon.getDialNumber(dnis,intercon.frameworkObj.SdAgent.agtId,type);
+		if(intercon.dialMode==1){
+			intercon.frameworkObj.SdAgent.dialout(dialNumber, "R", intercon.dialGroup);
+		}else{
+			intercon.frameworkObj.SdAgent.dialout(dialNumber, "X", intercon.dialGroup);
+		}
+	}
+}
+
+intercon.runSdAgentTrans=function(dnis,type){
+	if(intercon.frameworkObj.phone.agtStatus==3){
+		intercon.showMessage("请先注册座席","互联互通");
+		return;
+	}
+	if(intercon.frameworkObj.phone.callStatus!=2){
+		intercon.showMessage("当前座席非通话状态，无法进行互联互通转接操作","互联互通");
+		return;
+	}
+	
+	var lastCallId = intercon.frameworkObj.phone.lastCall.callId;
+	//本地CTI
+	if(intercon.lastCtiId==intercon.ctiId){
+		var dialGrp = parseInt(intercon.frameworkObj.phone.dialGrp);
+		if(type=="agt"){
+			intercon.frameworkObj.SdAgent.agtReturnIVR("1",lastCallId,dnis+",");
+		}else{
+			intercon.frameworkObj.SdAgent.agtReturnIVR("1",lastCallId,","+dnis);
+		}
+	}else{
+		var dialNumber = intercon.getDialNumber(dnis,intercon.frameworkObj.SdAgent.agtId,type);
+		var transNO = dialNumber.split("*");
+		transNO =transNO[0] +"*"+ intercon.frameworkObj.phone.lastCall.ani
+		intercon.frameworkObj.SdAgent.agtReturnIVR("9",lastCallId,",,"+transNO);
+	}
+}
+
+
+
+intercon.checkFrarework=function(){
+	if(top.AgentApi!=null){
+		intercon.framework="WebAgent";
+	}else if(top.Client!=null){
+		if(top.Client.ICareAgent==null){
+			alert("框架呼叫中心插件未加载成功，无法使用外拨及转接功能");
+		}
+		intercon.framework="OCX";
+	}else if(window.SandiClient!=null){
+		intercon.framework="VB";
+	}else if(typeof(parent.getPhoneFrame)=="function"){
+		intercon.frameworkObj = parent.getPhoneFrame().contentWindow;
+		if(intercon.frameworkObj.SdAgent!=null){
+			intercon.framework="SdAgent";
+		}
+	}
+	
+	if(intercon.framework==""){
+		alert("该页面未嵌入呼叫中心框架，无法使用外拨及转接功能");
+	}
+}
+
+intercon.getDialNumber=function(dnis,agentId,type){
+	var dialStr = "";
+	if(type=="agt"){
+		dialStr=intercon.lastCtiId+"2"+dnis+"*"+intercon.ctiId+"2"+agentId;
+	}else{
+		var grpNo=intercon.letterToNumber(dnis.substring(0,1))+dnis.substring(1);
+		dialStr=intercon.lastCtiId+"3"+grpNo+"*"+intercon.ctiId+"2"+agentId;		
+	}
+	return dialStr;
+}
+
+intercon.searchAll=function(key){
+	if($.trim(key)==""){
+		$("#"+intercon.lastTabId).show();
+		$("#divSearchList").hide();
+		$("#divSearchList").empty();
+		return;
+	}
+	$("#divSearchList").show();
+	$("#divAllTree").hide();
+	$("#divOrgFav").hide();
+	$("#divOrgRecent").hide();
+	
+	intercon.showMask();
+	$.ajax({
+		type: "get",
+		async: false,
+  		url:g_url+"webservice/cc/rest/agent/getAllOrgGrpAgt",
+  		headers: {
+            "tenantsIds": g_tenantsId,
+            "findKey": encodeURIComponent(key)
+        },
+  		success: function(data){
+  			if(typeof(data)=="string"){
+  				$("body").empty();
+  				intercon.hideMask();
+  				alert(data);
+  				return;
+  			}
+  			
+  			intercon.makeSearchRlt(data);
+  			intercon.hideMask();
+  		},
+  		error:function(req,state,err){
+  			intercon.hideMask();
+  			alert("查询数据失败");
+  		}
+	});
+}
+
+intercon.makeSearchRlt=function(data){
+	$("#divSearchList").empty();
+	var lihtml=[];
+	var dType = "";
+	for(var i=0;i<data.length;i++){
+		dType=data[i].dataType;
+		var ctiId = intercon.findCtiIdByOrgId(data[i].organizerId);
+		lihtml.push('<div class="search-item" dataType="'+dType+'" dataId="'+data[i].id+'" orgId="'+data[i].organizerId+'" grps="'+data[i].groups+'" ctiId="'+ctiId+'">');
+		lihtml.push('<div class="rlt-icon"><div class="type-icon ')
+		if(dType=="ORG"){
+			lihtml.push("type-org")
+		}else if(dType=="GRP"){
+			lihtml.push("type-grp")
+		}else if(dType=="AGT"){
+			lihtml.push("type-agt")
+		}else{
+			lihtml.push("type-org")
+		}
+		lihtml.push('"></div></div><div class="rlt-info">');
+		lihtml.push('<div class="info-name">');
+		lihtml.push(data[i].name);
+		if(dType!="ORG"){
+			lihtml.push('(');
+			lihtml.push(data[i].id);
+			lihtml.push(')');
+		}
+		lihtml.push('</div><div class="info-org">');
+		lihtml.push(intercon.getOrgLevel(data[i].organizerId,false));
+		lihtml.push('</div></div><div class="rlt-oper" style="display:none;">');
+		if(dType!="ORG"){
+			if(dType=="GRP" && ctiId==intercon.ctiId && intercon.dialMode==0){
+			}else{
+				lihtml.push('<div class="rlt-icon-dial" title="外拨"></div><div class="rlt-icon-trans" style="display:block;" title="转接"></div>')
+			}
+		}
+		lihtml.push('<div class="rlt-icon-split"></div><div class="rlt-icon-back-bg" title="进入"><div class="rlt-icon-back" title="进入"></div></div></div></div>')
+	}
+	$("#divSearchList").append(lihtml.join(''));
+	
+	$("#divSearchList .search-item").bind({
+		mouseover:function(){
+			$(this).find("div.rlt-info").css("width","50%");
+			$(this).find("div.rlt-oper").show();
+		},
+		mouseout:function(){
+			$(this).find("div.rlt-info").css("width","");
+			$(this).find("div.rlt-oper").hide();
+		}
+	});
+
+	//点击名称
+	$("#divSearchList .search-item .rlt-info .info-name").bind("click",function(){
+		var obj = $(this).parent().parent();
+		if(obj==null)  return;
+		var dType = obj.attr("dataType");
+		
+		intercon.tabsClick("orgAll");
+		//查找座席组标识
+		if(dType == "GRP"){
+			intercon.findGropId = obj.attr("dataId");
+		}else if(dType=="AGT"){//查找座席标识
+			intercon.findGropId = obj.attr("grps");
+			intercon.findAgentId = obj.attr("dataId");
+		}
+		var orgId = obj.attr("orgId");
+		intercon.getOrgLevel(orgId,true);
+	});
+
+	//点击右侧工具图标
+	$("#divSearchList .search-item .rlt-oper div").bind("click",function(){
+		var title = $(this).attr("title");
+		var obj = $(this).parent().parent();
+		if(obj==null)  return;
+		var dType = obj.attr("dataType");
+		if(title=="外拨"){
+			 intercon.lastCtiId = obj.attr("ctiId");
+			 intercon.runDial(obj.attr("dataId"),dType.toLowerCase());
+		}else if(title=="转接"){
+			intercon.lastCtiId = obj.attr("ctiId");
+			intercon.runTrans(obj.attr("dataId"),dType.toLowerCase());
+		}else if(title=="进入"){
+			intercon.tabsClick("orgAll");
+			//查找座席组标识
+			if(dType == "GRP"){
+				intercon.findGropId = obj.attr("dataId");
+			}else if(dType=="AGT"){//查找座席标识
+				intercon.findGropId = obj.attr("grps");
+				intercon.findAgentId = obj.attr("dataId");
+			}
+			var orgId = obj.attr("orgId");
+			intercon.getOrgLevel(orgId,true);
+		}
+	});
+}
+
+//获取组织架构层级
+intercon.getOrgLevel=function(id,bSelect){
+	var node = $("#treeOrgSite").tree("find",id);
+	if(node==null) return "-";
+	var s = node.text;
+	if(bSelect==true){
+		$("#treeOrgSite").tree("select",node.target);
+		intercon.orgTreeNodeClick(node);
+		$("#treeOrgSite").tree("scrollTo",node.target);
+	}
+	
+	for(var i=0;i<50;i++){
+		node = $("#treeOrgSite").tree("getParent",node.target);
+		if(node==null) break;
+		if(bSelect==true){
+			$("#treeOrgSite").tree("expand",node.target);
+		}
+		s = node.text + "-" + s;
+	}
+	return s;
+}
+
+intercon.findCtiIdByOrgId=function(orgId){
+	var node = $("#treeOrgSite").tree("find",orgId);
+	if(node==null) return "";
+	return node.attributes.CTI_ID;
+}
+
+//定位座席组
+intercon.findGroup=function(grpId){
+	intercon.findGropId="";
+	$("#divGroupDept ul li").each(function(i){
+		if(grpId==$(this).attr("groupId")){
+			$(this).click();
+			return false;
+		}
+	});
+}
+
+intercon.findAgent=function(agtId){
+	intercon.findAgentId = "";
+	$("#divAgent ul li").each(function(i){
+		if(agtId==$(this).attr("agentId")){
+			$(this).click();
+			return false;
+		}
+	});
+}
+
+intercon.letterToNumber = function(c){
+	var letter=c.toUpperCase();
+	switch(letter){
+		case "A":
+			return 21;
+		case "B":
+			return 22;
+		case "C":
+			return 23;
+		case "D":
+			return 31;
+		case "E":
+			return 32;
+		case "F":
+			return 33;
+		case "G":
+			return 41;
+		case "H":
+			return 42;
+		case "I":
+			return 43;
+		case "J":
+			return 51;
+		case "K":
+			return 52;
+		case "L":
+			return 53;
+		case "M":
+			return 61;
+		case "N":
+			return 62;
+		case "O":
+			return 63;
+		case "P":
+			return 71;
+		case "Q":
+			return 72;
+		case "R":
+			return 73;
+		case "S":
+			return 74;
+		case "T":
+			return 81;
+		case "U":
+			return 82;
+		case "V":
+			return 83;
+		case "W":
+			return 91;
+		case "X":
+			return 92;
+		case "Y":
+			return 93;
+		case "Z":
+			return 94;
+	}
+}
+
+intercon.showMessage=function(msg,title){
+	$.messager.show({
+		title:title==undefined?"系统提示":title,
+		msg:msg,
+		iconCls:"icon-tip",
+		timeout:3000
+	});
+}
+</script>
+</body>
+</html>
