@@ -24,9 +24,9 @@ SD-PaaS开发者平台的基本接口接入例子，通过此例子，你可基�
   
 - 错误排查
 	
-部署时出错，请先确认是否按照上面步骤执行（例如说相应的配置是否有修改）；  
-项目导入eclipse时报错的情况下，右键项目-->Build Path-->Configure Build Path..，检查jdk包和tomcat包是否正确；  
-再遇到无法解决的问题可上github和博客搜索下有没有已解决的方法。再不行还可以联系我，联系方式有QQ、github、邮件等。
+  部署时出错，请先确认是否按照上面步骤执行（例如说相应的配置是否有修改）；  
+  项目导入eclipse时报错的情况下，右键项目-->Build Path-->Configure Build Path..，检查jdk包和tomcat包是否正确；  
+  再遇到无法解决的问题可上github和博客搜索下有没有已解决的方法。再不行还可以联系我，联系方式有QQ、github、邮件等。
 
 ###使用在线的SD-PaaS DemoProject
 
