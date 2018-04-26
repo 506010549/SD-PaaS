@@ -47,26 +47,26 @@
 						</div>
 						<div class="form-group col-sm-4">
 							<label for="openId" class="col-sm-4">OpenID<font color="red">*</font></label> <input class="form-control"
-								id="openId" value="ttxitsioeoshifs">
+								id="openId" value="33A5A27DFD0E9641E0530100007F8A3E">
 						</div>
 						<div class="form-group col-sm-4">
 							<label for="userCode" class="col-sm-4">用户账号</label> <input class="form-control"
-								id="userCode" placeholder="" value="-1">
+								id="userCode" placeholder="" value="8673@sandi.com.cn">
 						</div>
 					</div>
 					
 					<div class="form-inline row">
 						<div class="form-group col-sm-4">
 							<label for="organizerId" class="col-sm-4">组织ID</label> <input class="form-control"
-								id="organizerId" placeholder="" value="2359">
+								id="organizerId" placeholder="" value="1">
 						</div>
 						<div class="form-group col-sm-4">
 							<label for="offHkTmSt" class="col-sm-4">呼入起始时间</label> <input class="form-control"
-								id="offHkTmSt" placeholder="yyyy-MM-dd HH:mm:ss" value="2016-02-17 00:00:00">
+								id="offHkTmSt" placeholder="yyyy-MM-dd HH:mm:ss" value="2018-04-26 00:00:00">
 						</div>
 						<div class="form-group col-sm-4">
 							<label for="offHkTmEd" class="col-sm-4">呼入结束时间</label> <input class="form-control"
-								id="offHkTmEd" placeholder="yyyy-MM-dd HH:mm:ss" value="2016-02-17 23:00:00">
+								id="offHkTmEd" placeholder="yyyy-MM-dd HH:mm:ss" value="2018-04-26 23:59:59">
 						</div>
 					</div>
 				</form>
@@ -76,6 +76,7 @@
 						<thead>
 							<tr>
 								<th>呼叫流水号</th>
+								<th>呼叫子流水号</th>
 								<th>联系人名称</th>
 								<th>所属坐席组ID</th>
 								<th>座席ID</th>
@@ -337,6 +338,7 @@
 							var item = list[i];
 							var $tr = $("<tr/>");
 							$tr.append($("<td/>").html(item.CALLID != null ? item.CALLID : "暂无"));
+							$tr.append($("<td/>").html(item.SUBID != null ? item.SUBID : "暂无"));
 							$tr.append($("<td/>").html(item.CONTACT_NAME != null ? item.CONTACT_NAME : "暂无"));
 							$tr.append($("<td/>").html(item.GROUPID != null ? item.GROUPID : "暂无"));
 							$tr.append($("<td/>").html(item.AGTID != null ? item.AGTID : "暂无"));

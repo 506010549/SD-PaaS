@@ -146,9 +146,9 @@ public class DemoAction extends ActionSupport {
 		} else {
 			// 调用接口
 			// TODO 测试用
-			result = "{\"errcode\":\"0\",\"errmsg\":\"ok\",\"value\":{\"recType\":\"wav\",\"fileUrl\":\"http://172.16.24.12:8603/Rec1/72002/2016/03/03/102457001.wav\"}}";
-//			result = ApiUtils.getRecordFile(accessToken, clientId, 
-//					openId, callId, subId, organizerId);
+//			result = "{\"errcode\":\"0\",\"errmsg\":\"ok\",\"value\":{\"recType\":\"wav\",\"fileUrl\":\"http://172.16.24.12:8603/Rec1/72002/2016/03/03/102457001.wav\"}}";
+			result = ApiUtils.getRecordFile(accessToken, clientId, 
+					openId, callId, subId, organizerId);
 		}
 		return SUCCESS;
 	}
@@ -182,13 +182,13 @@ public class DemoAction extends ActionSupport {
 		} else {
 			// 调用接口
 			try {
-//				byte[] bytes = ApiUtils.downloadRecord(accessToken, 
-//						clientId, openId, callId, subId, organizerId);
-//				inputStream = new ByteArrayInputStream(bytes);
+				byte[] bytes = ApiUtils.downloadRecord(accessToken, 
+						clientId, openId, callId, subId, organizerId);
+				inputStream = new ByteArrayInputStream(bytes);
 				// TODO 测试用
-				HttpServletRequest request = (HttpServletRequest) ctx.get(ServletActionContext.HTTP_REQUEST);
-				String path = request.getServletContext().getRealPath("/") + "test.wav";
-				inputStream = new FileInputStream(path);
+				/*HttpServletRequest request = (HttpServletRequest) ctx.get(ServletActionContext.HTTP_REQUEST);
+				String path = request.getServletContext().getRealPath("/") + "test.wav";*/
+//				inputStream = new FileInputStream(path);
 				bufferSize = inputStream.available();
 			} catch (Exception e) {e.printStackTrace();}
 		}

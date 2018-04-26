@@ -1,8 +1,9 @@
 ﻿var phone={
-	//url:"http://10.15.10.90:8080/AgentService",
-	url:"http://172.16.24.21:80/AgentService",	//呼叫中心服务地址
-	userCode:"81000@sdcpb.com",				//呼叫中心用户账号
-	userPwd:"111111",						//呼叫中心用户密码
+	//呼叫中心服务地址
+	url:"http://124.172.245.229:9817/AgentService",
+	//呼叫中心用户账号
+	userCode:"8673@sandi.com.cn",
+	userPwd:"123456",						//呼叫中心用户密码
 	groupId:"",
 	station:"",
 	agtStatus:3,
@@ -215,7 +216,7 @@ SdAgent.event("onRunDialDialed").subscribe(function(callid, subid, area, dnis){
 	writeLog("onRunDialDialed[callid:"+callid+",subid:"+subid+",area:"+area+",dnis:"+dnis+"]");
 	phone.lastCall.callId=callid;
 	phone.lastCall.ani = dnis;
-	SdAgent.agtWorkAfterCall();	
+//	SdAgent.agtWorkAfterCall();	
 	var areaInfo = phone.getArea(dnis);
 	ztoDialog('ring',SdAgent.agtId+","+dnis+",2,"+callid+","+subid+","+dnis+","+area+",,,"+areaInfo);
 	phone.dialOutCnt+=1;
@@ -411,18 +412,34 @@ phone.setMangXian = function(){
 	}
 }
 
+	var screenPopCallback = function (response) {
+		if (response.result) {
+		}
+		else {
+			alert('Screen pop failed.' + result.error);
+		}
+	};
+
 //振铃状态
 phone.setRing = function(callId, subId, area, ani, grpId, srcAgt, ivrList){
 	$("#callStatus").html("振铃中");
-	SdAgent.agtWorkAfterCall();
+//	SdAgent.agtWorkAfterCall();
 	//ani,dnis,calltype,callid,subid,dnis,area,,ivrList(agtId,groupId,keyNo,订单号)
 	var orderNo = "";
 	if(ivrList!=null && ivrList!=undefined && ivrList.length>=4) orderNo = ivrList[3];
 	var areaInfo = phone.getArea(ani);
 	writeLog("来电振铃事件[来电号码："+ani+"，来电组："+grpId+"，区号："+areaInfo+"，订单号："+orderNo+"]");
-	ztoDialog('ring',ani+","+SdAgent.agtId+",1,"+callId+","+subId+","+SdAgent.agtId+","+area+",,"+orderNo+","+areaInfo);
+//	GTI振铃事件
+	phone.gtiService(ani);
+//	alert("http://localhost:5000?ani=555-5551&dnis=703-555-1234&type=VOIP&Phone="+ani);
+//	ztoDialog('ring',ani+","+SdAgent.agtId+",1,"+callId+","+subId+","+SdAgent.agtId+","+area+",,"+orderNo+","+areaInfo);
+//	sforce.interaction.screenPop('/0017F000009xwbY', true, screenPopCallback);
 	phone.callCnt+=1;
 	try{parent.setAgtCountInfo(SdAgent.agtId,phone.workTime,phone.groupId,$.date.dateFormat(phone.talkTime,'hh:mm:ss'),phone.callCnt+"/"+phone.dialOutCnt,$.date.dateFormat(phone.totalTalkTime,'hh:mm:ss'));}catch(e){}
+}
+
+phone.gtiService = function(ani){
+	$.ajax({url:"http://localhost:5000?ani=555-5551&dnis=703-555-1234&type=VOIP&Phone="+ani});
 }
 
 //播放工号
@@ -448,7 +465,7 @@ phone.setCallIn = function() {
 		}else{
 			phone.agtStatus=8;
 		}
-		SdAgent.agtWorkAfterCall();
+//		SdAgent.agtWorkAfterCall();
 		phone.event("onInterceptTalk").publish();
 	}
 	
@@ -570,6 +587,8 @@ phone.setAgtStatus = function(status, hook, occupy){
 		if(occupy==0){		//空闲
 			phone.setOnHk();
 		}else{					//忙
+//			phone.occupy = 0;
+//			phone.setOnHk();
 			phone.setWorkAfterCall();
 		}
 		break;

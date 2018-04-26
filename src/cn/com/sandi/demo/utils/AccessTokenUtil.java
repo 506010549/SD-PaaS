@@ -7,7 +7,7 @@ import org.apache.struts2.json.JSONUtil;
 
 /**
  * AccessToken工具类
- * @author liyl
+ * @author lWJ
  * 用于获取AccessToken并保管起来
  * 过期时会自动刷新
  */
@@ -20,10 +20,12 @@ public class AccessTokenUtil {
 	public static String openId;
 	
 	static {
-		host_url = "http://172.16.24.21:9812/VenusRest";			// 服务器地址
-		client_id = "test";										//开发者ID
-		client_secret = "test";							//开发者秘钥
-		openId = "test";									//测试用户的OpenId
+		host_url = "http://124.172.245.229:9817/VenusRest";			// 服务器地址
+//		host_url = "http://172.16.23.21:98/VenusRest";	
+		client_id = "sandi";										//开发者ID
+		client_secret = "sandi";							//开发者秘钥
+		openId = "33A5A27DFD0E9641E0530100007F8A3E";									//测试用户的OpenId
+//		openId = "30F63C20A1131890E0530100007FB4D0";
 	}
 	
 	private static String accessToken;			// 保存从服务器中获取的 Token

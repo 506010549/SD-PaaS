@@ -47,7 +47,7 @@
 					<div class="form-group">
 						<label for="openId">OpenID<font color="red">*</font></label> <input
 							class="form-control" id="openId"
-							placeholder="OpenID" value="ttxitsioeoshifs">
+							placeholder="OpenID" value="33A5A27DFD0E9641E0530100007F8A3E">
 					</div>
 				</form>
 				

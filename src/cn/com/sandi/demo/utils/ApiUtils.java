@@ -150,7 +150,7 @@ public class ApiUtils {
 		// 接口地址
 		String url = String.format(AccessTokenUtil.host_url+"/webservice/sd-saas/"
 				+ "record/downloadRecord/%s/%s/%s/%s/%s?accessToken=%s",
-				"clientId", "openId", "callId", "subId", "organizerId", accessToken);
+				clientId, openId, callId, subId, organizerId, accessToken);
 		
 		// 调用接口
 	    return HttpUtils.getBytes(url);

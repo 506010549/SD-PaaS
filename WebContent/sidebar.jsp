@@ -10,6 +10,7 @@
 		<li><a href="${pageContext.request.contextPath}/getAgentCallHistoryList.jsp">查询通话记录</a></li>
 		<li><a href="${pageContext.request.contextPath}/getuserinfo.jsp">查询用户信息</a></li>
 		<li><a href="${pageContext.request.contextPath}/exportExcel.jsp">导出Excel</a></li>
-		<li><a href="${pageContext.request.contextPath}/phone2/index.html" target="_blank">呼叫中心工具条</a></li>
+		<li><a href="${pageContext.request.contextPath}/phone2/test.html" target="_blank">呼叫中心工具条</a></li>
+		<li><a href="http://124.172.245.229:9846/index.php/home/item/pwd?item_id=4" target="_blank">API文档</a></li>
 	</ul>
 </div>

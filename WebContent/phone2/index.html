@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>
 <head>
     <title>客服系统</title>
@@ -143,9 +143,9 @@
 	
     <iframe id="frameB" style="display:none;"></iframe>
     <script src="js/jquery-1.7.2.min.js?v=1.0.0" type="text/javascript"></script>
-	<!-- <script src="js/jquery.stream-1.2.js?v=1.0.2" type="text/javascript"></script>
-	<script src="js/SdAgent.js?v=1.0.2" type="text/javascript"></script> -->
-	<script src="js/SdAgent-min.js?v=1.0.5" type="text/javascript"></script>
+	 <script src="js/jquery.stream-1.2.js?v=1.0.2" type="text/javascript"></script>
+	<script src="js/SdAgent.js?v=1.0.2" type="text/javascript"></script>
+	<!--<script src="js/SdAgent-min.js?v=1.0.5" type="text/javascript"></script>-->
 	<script src="js/jquery.sdcommon.js?v=1.0.0" type="text/javascript"></script>
     <script src="js/phone.js?v=1.0.5" type="text/javascript"></script>
     <script type="text/javascript" >
@@ -359,13 +359,13 @@
 			//SdAgent.agtWorkAfterCallOver();
 			//parent.phone.closeAgtMonitor();
 			//parent.showRemoteCtiDlg("RemoteCTI.html?tenantsId=010100899F9BD54BB525C8&myId=010400587ACB6A42332103");
-			parent.showRemoteCtiDlg("/phone/sandi/RemoteCTI.html?tenantsId=010100899F9BD54BB525C8&myId=010400587ACB6A42332103");
+			parent.showRemoteCtiDlg("./RemoteCTI.html?tenantsId=010100899F9BD54BB525C8&myId=010400587ACB6A42332103");
 		});
 		
         function ztoDialog(type,data){
             try{
-				//alert(type+":"+data);
-				parent.Dialog(type,data);
+				alert(type+":"+data);
+				//parent.Dialog(type,data);
             }catch(e){}
         }
 		

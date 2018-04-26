@@ -15,10 +15,12 @@
 		<iframe id="frmPhone" name="frmPhone" width="100%" height="90px" frameborder="0" src="index.html"></iframe>
 	</div>
 	<div id="divAgtMonitor" style="display:none;" class="s-dialog">
+		<button id="closeAgtMonitor">关闭</button>
 		<iframe id="frmAgtMonitor" name="frmAgtMonitor" width="100%" height="510px" frameborder="0" src="about:blank"></iframe>
 	</div>
 	
 	<div id="divRemoteCTI" style="display:none;" class="s-dialog">
+		<button id="closeRemoteCTI">关闭</button>
 		<iframe id="frmRemoteCTI" name="frmRemoteCTI" width="100%" height="510px" frameborder="0" src="about:blank"></iframe>
 	</div>
 	
@@ -36,6 +38,14 @@
 	var dlgStatus = 0;
 	var searchStr = location.search;
 	$("#frmPhone").attr("src","index.html"+searchStr);
+
+	$('#closeAgtMonitor').click(function(){
+		$("#divAgtMonitor").hide();
+	});
+
+	$('#closeRemoteCTI').click(function(){
+		$("#divRemoteCTI").hide();
+	});
 	
 	var phone={
 		toolsType:'zhuanjie',

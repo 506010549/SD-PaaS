@@ -55,7 +55,7 @@
 					</div>
 					<div class="form-group">
 							<label for="openId">OpenID<font color="red">*</font></label>
-							<input class="form-control" id="openId" value="ttxitsioeoshifs">
+							<input class="form-control" id="openId" value="33A5A27DFD0E9641E0530100007F8A3E">
 					</div>
 				</form>
 				

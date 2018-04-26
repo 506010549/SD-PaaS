@@ -223,7 +223,11 @@ $("#btnTransGrp").click(function(){
 		return;
 	}
 	
-	phoneObj.SdAgent.dialTransIVR(phoneObj.phone.lastCall.callId,"",transGrp,"");
+//	三方转组
+//	phoneObj.SdAgent.dialTransIVR(phoneObj.phone.lastCall.callId,"",transGrp,"");
+//	直接转组
+	phoneObj.SdAgent.agtReturnIVR("1",phoneObj.phone.lastCall.callId,','+transGrp);
+	
 });
 
 $("#cbTransAgtGrp").bind({
@@ -258,11 +262,17 @@ $("#btnTrans").click(function(){
 	if (phoneObj.phone.callStatus == 2 || phoneObj.phone.callStatus == 20) {
 		if(operType=="agt"){
 			dialNo = agtInfo[0];
-			phoneObj.SdAgent.dialout(dialNo,"A",0);
+//			三方转接
+//			phoneObj.SdAgent.dialout(dialNo,"A",0);
+//			直接转接
+			phoneObj.SdAgent.agtReturnIVR("1",phoneObj.phone.lastCall.callId,dialNo+',');
 		}else if(operType=="grp"){
 			$("#btnTransGrp").click();
 		}else{
-			phoneObj.SdAgent.dialout(dialNo,"X",0);
+//			三方转外
+//			phoneObj.SdAgent.dialout(dialNo,"X",0);
+//			直接转外
+			phoneObj.SdAgent.agtReturnIVR("3",phoneObj.phone.lastCall.callId,',,'+dialNo);
 		}
 	}else{
 		phoneObj.SdAgent.dialTrans();

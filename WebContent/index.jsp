@@ -56,7 +56,7 @@
 					<div class="form-group">
 						<label for="client_secret">Client Secret<font color="red">*</font></label>
 						<input class="form-control" id="client_secret"
-							placeholder="Client Secret" value="sandisdsaastest">
+							placeholder="Client Secret" value="sandi">
 					</div>
 				</form>
 
